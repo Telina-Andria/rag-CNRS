@@ -2,7 +2,7 @@ import logging
 from collections.abc import Generator
 from contextlib import contextmanager
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.engine import Engine
@@ -16,15 +16,30 @@ logger = logging.getLogger(__name__)
 class PostgreSQLSettings(BaseSettings):
     """PostgreSQL configuration settings."""
 
-    database_url: str = Field(
-        default="postgresql://rag_user:rag_password@localhost:5432/rag_db",
-        description="PostgreSQL database URL",
+    user: str = Field(default="postgres", description="PostgreSQL user")
+    password: str = Field(default="postgres", description="PostgreSQL password")
+    host: str = Field(default="localhost", description="PostgreSQL host")
+    port: int = Field(default=5432, description="PostgreSQL port")
+    db: str = Field(default="postgres", description="PostgreSQL database name")
+
+    database_url: str | None = Field(
+        default=None,
+        description="PostgreSQL database URL (construite depuis user/password/host/port/db)",
     )
     echo_sql: bool = Field(default=False, description="Enable SQL query logging")
     pool_size: int = Field(default=20, description="Database connection pool size")
     max_overflow: int = Field(default=0, description="Maximum pool overflow")
 
-    model_config = SettingsConfigDict(env_prefix="POSTGRES_")
+    model_config = SettingsConfigDict(env_prefix="POSTGRES_", env_file=".env")
+
+    @model_validator(mode="after")
+    def build_database_url(self) -> "PostgreSQLSettings":
+        """Construit database_url à partir des champs séparés si non fournie explicitement."""
+        if self.database_url is None:
+            self.database_url = (
+                f"postgresql://{self.user}:{self.password}@{self.host}:{self.port}/{self.db}"
+            )
+        return self
 
 
 Base = declarative_base()
@@ -41,15 +56,13 @@ class PostgreSQLDatabase(BaseDatabase):
     def startup(self) -> None:
         """Initialize the database connection."""
         try:
-            host = (
-                self.config.database_url.split("@")[1]
-                if "@" in self.config.database_url
-                else "localhost"
-            )
-            logger.info(f"Attempting to connect to PostgreSQL at: {host}")
+            database_url = self.config.database_url
+            assert database_url is not None  # construite par le model_validator
+
+            logger.info(f"Attempting to connect to PostgreSQL at: {self.config.host}")
 
             self.engine = create_engine(
-                self.config.database_url,
+                database_url,
                 echo=self.config.echo_sql,
                 pool_size=self.config.pool_size,
                 max_overflow=self.config.max_overflow,
