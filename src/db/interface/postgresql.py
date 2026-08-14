@@ -30,7 +30,7 @@ class PostgreSQLSettings(BaseSettings):
     pool_size: int = Field(default=20, description="Database connection pool size")
     max_overflow: int = Field(default=0, description="Maximum pool overflow")
 
-    model_config = SettingsConfigDict(env_prefix="POSTGRES_", env_file=".env")
+    model_config = SettingsConfigDict(env_prefix="POSTGRES_", env_file=".env", extra="ignore")
 
     @model_validator(mode="after")
     def build_database_url(self) -> "PostgreSQLSettings":
