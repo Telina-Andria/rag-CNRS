@@ -12,6 +12,10 @@ dependencies = [
     "torch",
     "huggingface-hub",
     "tqdm",
+    "sqlalchemy",
+    "psycopg2-binary",
+    "pydantic",
+    "pydantic-settings",
 ]
 
 [dependency-groups]
@@ -19,6 +23,8 @@ dev = [
     "pre-commit",
     "ruff",
     "mypy",
+    "pytest",
+    "testcontainers",
 ]
 
 [tool.uv]
@@ -35,3 +41,7 @@ select = ["E", "F", "I", "UP", "B"]
 python_version = "3.11"
 ignore_missing_imports = true
 check_untyped_defs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

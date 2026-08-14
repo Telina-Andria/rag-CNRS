@@ -3,3 +3,11 @@
 !.pre-commit-config.yaml
 !pyproject.toml
 !uv.lock
+!compose.yaml
+!.env.example
+!src
+!src/**
+!tests
+!tests/**
+__pycache__/
+*.pyc
