@@ -1,4 +1,5 @@
 import pytest
+from sqlalchemy.exc import IntegrityError
 from testcontainers.community.postgres import PostgresContainer
 
 from src.db.interface.postgresql import PostgreSQLDatabase, PostgreSQLSettings
@@ -51,3 +52,20 @@ def test_load_complementaire_inserts_and_is_visible_in_existing_categories(db):
         session.commit()
 
         assert get_existing_categories(session) == {"avantages"}
+
+
+def test_load_concour_duplicate_numero_raises_integrity_error(db):
+    data = ConcourCreate(
+        numero="1",
+        discipline="A : Sciences du vivant",
+        corps="Ingénieur de recherche",
+        content="Contenu du concours...",
+    )
+
+    with db.get_session() as session:
+        load_concour(session, data)
+        session.commit()
+
+    with db.get_session() as session, pytest.raises(IntegrityError):
+        load_concour(session, data)
+        session.commit()
