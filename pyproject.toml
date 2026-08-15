@@ -39,20 +39,21 @@ target-version = "py311"
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
-# Script legacy déplacé tel quel (voir src/chunking/heading.py), non modifié.
+# Scripts legacy déplacés tels quels (voir src/chunking/heading.py), non modifiés.
 "src/chunking/heading_chunking.py" = ["E741", "B905"]
+"src/chunking/build_chunks.py" = ["E741", "B905"]
 
 [tool.mypy]
 python_version = "3.11"
 ignore_missing_imports = true
 check_untyped_defs = true
 
-# build_chunks.py (script racine legacy, conservé tel quel) et
-# src/chunking/heading_chunking.py (legacy, déplacé sans modification, voir
-# src/chunking/heading.py) : non couverts par mypy pour éviter de les
-# modifier alors qu'ils sont volontairement laissés inchangés.
+# src/chunking/heading_chunking.py et src/chunking/build_chunks.py (scripts
+# legacy, déplacés sans modification, voir src/chunking/heading.py) : non
+# couverts par mypy pour éviter de les modifier alors qu'ils sont
+# volontairement laissés inchangés.
 [[tool.mypy.overrides]]
-module = ["build_chunks", "src.chunking.heading_chunking"]
+module = ["src.chunking.heading_chunking", "src.chunking.build_chunks"]
 ignore_errors = true
 
 [tool.pytest.ini_options]
