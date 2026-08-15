@@ -1,7 +1,7 @@
 """Stratégie de chunking heuristique "heading-based", gratuite (pas de LLM).
 
-Réutilise `heading_chunk()` et `CONCOURS_HEADINGS` des scripts racine
-(`heading_chunking.py`, `build_chunks.py`), aucune duplication de
+Réutilise `heading_chunk()` (`src/chunking/heading_chunking.py`) et
+`CONCOURS_HEADINGS` du script racine `build_chunks.py`, aucune duplication de
 l'heuristique de détection de titres.
 
 `clean_pages()` n'est pas réutilisable ici : elle attend une liste de pages
@@ -15,14 +15,16 @@ associée (`page_start`/`page_end` valent `None`), comme le fait déjà
 import sys
 from pathlib import Path
 
+# build_chunks.py reste un script racine (legacy, conservé tel quel) : on
+# ajoute la racine du repo au path pour pouvoir l'importer directement.
 _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 from build_chunks import CONCOURS_HEADINGS  # noqa: E402
-from heading_chunking import heading_chunk  # noqa: E402
 from src.chunking.base import ChunkingStrategy  # noqa: E402
 from src.chunking.concours_parser import parse_concour_content  # noqa: E402
+from src.chunking.heading_chunking import heading_chunk  # noqa: E402
 from src.chunking.models import Chunk  # noqa: E402
 from src.models.complementaire import Complementaire  # noqa: E402
 from src.models.concour import Concour  # noqa: E402
