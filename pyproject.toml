@@ -16,6 +16,7 @@ dependencies = [
     "psycopg2-binary",
     "pydantic",
     "pydantic-settings",
+    "anthropic>=0.122.0",
 ]
 
 [dependency-groups]
@@ -41,6 +42,13 @@ select = ["E", "F", "I", "UP", "B"]
 python_version = "3.11"
 ignore_missing_imports = true
 check_untyped_defs = true
+
+# Scripts racine legacy (conservés tels quels comme référence, voir
+# src/chunking/heading.py) : non couverts par mypy, pour éviter de les
+# modifier alors qu'ils sont volontairement laissés inchangés.
+[[tool.mypy.overrides]]
+module = ["heading_chunking", "build_chunks"]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
