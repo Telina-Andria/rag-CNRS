@@ -10,9 +10,20 @@ from src.chunking.extraction import (
     extract_remuneration,
 )
 from src.db.interface.postgresql import PostgreSQLDatabase, PostgreSQLSettings
-from src.ingestion.load import load_complementaire, load_concour
-from src.schemas.complementaire import ComplementaireCreate
+from src.ingestion.load import (
+    load_accompagnement,
+    load_avantage,
+    load_concour,
+    load_guide_candidat,
+    load_institut,
+    load_remuneration,
+)
+from src.schemas.accompagnement import AccompagnementCreate
+from src.schemas.avantage import AvantageCreate
 from src.schemas.concour import ConcourCreate
+from src.schemas.guide_candidat import GuideCandidatCreate
+from src.schemas.institut import InstitutCreate
+from src.schemas.remuneration import RemunerationCreate
 
 
 @pytest.fixture
@@ -37,16 +48,17 @@ def seeded_session(db):
                 content="Contenu du concours...",
             ),
         )
-        for categorie in [
-            "avantages",
-            "accompagnement",
-            "guide_candidat",
-            "instituts",
-            "remuneration",
-        ]:
-            load_complementaire(
-                session, ComplementaireCreate(categorie=categorie, contenu=f"Contenu {categorie}")
-            )
+        load_avantage(session, AvantageCreate(page_num=1, contenu="Contenu avantages page 1"))
+        load_avantage(session, AvantageCreate(page_num=2, contenu="Contenu avantages page 2"))
+        load_accompagnement(
+            session, AccompagnementCreate(page_num=1, contenu="Contenu accompagnement")
+        )
+        load_guide_candidat(
+            session, GuideCandidatCreate(page_num=1, contenu="Contenu guide_candidat")
+        )
+        load_institut(session, InstitutCreate(page_num=1, contenu="Contenu instituts"))
+        load_remuneration(session, RemunerationCreate(type="texte", contenu="Contenu texte"))
+        load_remuneration(session, RemunerationCreate(type="tableau", contenu="Contenu tableau"))
         session.commit()
         yield session
 
@@ -58,19 +70,25 @@ def test_extract_concours_returns_all_concours(seeded_session):
     assert concours[0].numero == "1"
 
 
+def test_extract_avantages_returns_all_pages_sorted(seeded_session):
+    rows = extract_avantages(seeded_session)
+
+    assert len(rows) == 2
+    assert [row.page_num for row in rows] == [1, 2]
+
+
 @pytest.mark.parametrize(
-    "extractor, categorie",
-    [
-        (extract_avantages, "avantages"),
-        (extract_accompagnement, "accompagnement"),
-        (extract_guide_candidat, "guide_candidat"),
-        (extract_instituts, "instituts"),
-        (extract_remuneration, "remuneration"),
-    ],
+    "extractor",
+    [extract_accompagnement, extract_guide_candidat, extract_instituts],
 )
-def test_extract_categorie_returns_only_its_categorie(seeded_session, extractor, categorie):
+def test_extract_page_categorie_returns_its_rows(seeded_session, extractor):
     rows = extractor(seeded_session)
 
     assert len(rows) == 1
-    assert rows[0].categorie == categorie
-    assert rows[0].contenu == f"Contenu {categorie}"
+    assert rows[0].page_num == 1
+
+
+def test_extract_remuneration_returns_texte_and_tableau_rows(seeded_session):
+    rows = extract_remuneration(seeded_session)
+
+    assert {row.type for row in rows} == {"texte", "tableau"}

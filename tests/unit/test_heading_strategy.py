@@ -20,16 +20,28 @@ def make_concour():
     )
 
 
-def make_complementaire():
-    contenu = "\n".join(
-        [
-            "AVANTAGES SOCIAUX",
-            "Le CNRS propose de nombreux avantages sociaux à ses agents.",
-            "FORMATION",
-            "La politique de formation du CNRS est ambitieuse et continue.",
-        ]
-    )
-    return SimpleNamespace(categorie="avantages", contenu=contenu)
+def make_page_rows():
+    return [
+        SimpleNamespace(
+            page_num=1,
+            contenu="AVANTAGES SOCIAUX\nLe CNRS propose de nombreux avantages sociaux à ses "
+            "agents.",
+        ),
+        SimpleNamespace(
+            page_num=2,
+            contenu="FORMATION\nLa politique de formation du CNRS est ambitieuse et continue.",
+        ),
+    ]
+
+
+def make_remuneration_rows():
+    return [
+        SimpleNamespace(
+            type="texte",
+            contenu="REMUNERATION\nVotre rémunération se compose du traitement indiciaire.",
+        ),
+        SimpleNamespace(type="tableau", contenu="Grade | Indice\nIR | 500"),
+    ]
 
 
 def test_chunk_concour_produces_one_chunk_per_rubrique():
@@ -43,13 +55,23 @@ def test_chunk_concour_produces_one_chunk_per_rubrique():
     assert chunks[0].chunk_id == "1_chunk_0"
 
 
-def test_chunk_complementaire_produces_sections_with_heading_metadata():
+def test_chunk_page_documents_produces_sections_with_real_pages():
     strategy = HeadingChunkingStrategy()
-    chunks = strategy.chunk_complementaire(make_complementaire())
+    chunks = strategy.chunk_page_documents("avantages", make_page_rows())
 
     assert len(chunks) > 0
     for chunk in chunks:
         assert chunk.metadata["categorie"] == "avantages"
         assert "chunking_method" in chunk.metadata
-        assert chunk.metadata["page_start"] is None
-        assert chunk.metadata["page_end"] is None
+        assert chunk.metadata["page_start"] is not None
+        assert chunk.metadata["page_end"] is not None
+
+
+def test_chunk_remuneration_produces_table_and_text_chunks():
+    strategy = HeadingChunkingStrategy()
+    chunks = strategy.chunk_remuneration(make_remuneration_rows())
+
+    methods = {c.metadata["chunking_method"] for c in chunks}
+    assert "table" in methods
+    assert any(c.metadata["chunking_method"] != "table" for c in chunks)
+    assert all(c.metadata["categorie"] == "remuneration" for c in chunks)

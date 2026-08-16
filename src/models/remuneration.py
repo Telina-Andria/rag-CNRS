@@ -6,17 +6,15 @@ from sqlalchemy.dialects.postgresql import UUID
 
 from src.db.interface.postgresql import Base
 
-CATEGORIES = ("avantages", "accompagnement", "guide_candidat", "instituts", "remuneration")
+TYPES = ("texte", "tableau")
 
 
-class Complementaire(Base):
-    __tablename__ = "complementaire"
-    __table_args__ = (
-        CheckConstraint(f"categorie IN {CATEGORIES}", name="ck_complementaire_categorie"),
-    )
+class Remuneration(Base):
+    __tablename__ = "remuneration"
+    __table_args__ = (CheckConstraint(f"type IN {TYPES}", name="ck_remuneration_type"),)
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    categorie = Column(Text, nullable=False)
+    type = Column(Text, nullable=False)
     contenu = Column(Text, nullable=False)
 
     created_at = Column(DateTime, default=lambda: datetime.now(UTC))

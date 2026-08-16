@@ -3,16 +3,18 @@
 Pour les concours : gabarit Python déterministe à partir des métadonnées du
 chunk, sans appel API (évite d'envoyer des centaines de chunks déjà
 structurés à l'API).
-Pour les complémentaires : un appel réel à `llm_client.generate_context` par
-chunk, avec le document entier (`complementaire.contenu`) comme contexte.
+Pour les catégories complémentaires (avantages, accompagnement,
+guide_candidat, instituts, remuneration) : un appel réel à
+`llm_client.generate_context` par chunk, avec le texte complet de la
+catégorie comme document de contexte.
 """
 
-from src.chunking.base import ChunkingStrategy
+from src.chunking.base import ChunkingStrategy, PageDocument
 from src.chunking.heading import HeadingChunkingStrategy
 from src.chunking.models import Chunk
 from src.llm.anthropic_client import AnthropicContextGenerator
-from src.models.complementaire import Complementaire
 from src.models.concour import Concour
+from src.models.remuneration import Remuneration
 
 _CONCOUR_CONTEXT_TEMPLATE = (
     "Ce chunk fait partie du concours {numero} ({discipline}, {corps}), "
@@ -39,11 +41,23 @@ class ContextualizedChunkingStrategy(ChunkingStrategy):
             chunk.contextualized_content = f"{context}\n\n{chunk.content}"
         return chunks
 
-    def chunk_complementaire(self, complementaire: Complementaire) -> list[Chunk]:
-        chunks = self.heading_strategy.chunk_complementaire(complementaire)
+    def chunk_page_documents(self, categorie: str, rows: list[PageDocument]) -> list[Chunk]:
+        chunks = self.heading_strategy.chunk_page_documents(categorie, rows)
+        document = "\n".join(row.contenu for row in sorted(rows, key=lambda row: row.page_num))
         for chunk in chunks:
             context = self.llm_client.generate_context(
-                document=complementaire.contenu, chunk_content=chunk.content
+                document=document, chunk_content=chunk.content
+            )
+            chunk.context = context
+            chunk.contextualized_content = f"{context}\n\n{chunk.content}"
+        return chunks
+
+    def chunk_remuneration(self, rows: list[Remuneration]) -> list[Chunk]:
+        chunks = self.heading_strategy.chunk_remuneration(rows)
+        document = "\n".join(row.contenu for row in rows)
+        for chunk in chunks:
+            context = self.llm_client.generate_context(
+                document=document, chunk_content=chunk.content
             )
             chunk.context = context
             chunk.contextualized_content = f"{context}\n\n{chunk.content}"

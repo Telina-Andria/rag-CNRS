@@ -1,7 +1,12 @@
 from typing import Any
 
-from src.schemas.complementaire import ComplementaireCreate
+from src.schemas.accompagnement import AccompagnementCreate
+from src.schemas.avantage import AvantageCreate
 from src.schemas.concour import ConcourCreate
+from src.schemas.guide_candidat import GuideCandidatCreate
+from src.schemas.institut import InstitutCreate
+from src.schemas.page_document import PageDocumentBase
+from src.schemas.remuneration import RemunerationCreate
 
 
 def build_concour_content(raw: dict[str, Any]) -> str:
@@ -31,19 +36,46 @@ def to_concour_create(raw: dict[str, Any]) -> ConcourCreate:
     )
 
 
-def build_remuneration_content(raw: dict[str, Any]) -> str:
-    """Assemble le texte et les tableaux d'un document de type rémunération."""
-    blocs = [raw.get("text", "")]
-    for table in raw.get("tables", []):
-        headers = table.get("headers", [])
-        rows = table.get("rows", [])
-        lignes = [" | ".join(headers)]
-        lignes.extend(" | ".join(row) for row in rows)
-        blocs.append("\n".join(lignes))
-    return "\n\n".join(blocs)
+def to_page_documents(raw: dict[str, Any], schema_cls: type[PageDocumentBase]) -> list[Any]:
+    """Valide et transforme un document paginé brut (avantages, accompagnement,
+    guide_candidat, instituts) en une ligne par page."""
+    return [
+        schema_cls(page_num=page.get("page_num"), contenu=page.get("text"))
+        for page in raw.get("pages", [])
+    ]
 
 
-def to_complementaire_create(raw: dict[str, Any]) -> ComplementaireCreate:
-    """Valide et transforme un document complémentaire brut en ComplementaireCreate."""
-    contenu = raw.get("full_text") or build_remuneration_content(raw)
-    return ComplementaireCreate(categorie=raw.get("category"), contenu=contenu)
+def to_avantage_create_list(raw: dict[str, Any]) -> list[AvantageCreate]:
+    return to_page_documents(raw, AvantageCreate)
+
+
+def to_accompagnement_create_list(raw: dict[str, Any]) -> list[AccompagnementCreate]:
+    return to_page_documents(raw, AccompagnementCreate)
+
+
+def to_guide_candidat_create_list(raw: dict[str, Any]) -> list[GuideCandidatCreate]:
+    return to_page_documents(raw, GuideCandidatCreate)
+
+
+def to_institut_create_list(raw: dict[str, Any]) -> list[InstitutCreate]:
+    return to_page_documents(raw, InstitutCreate)
+
+
+def render_table(table: dict[str, Any]) -> str:
+    """Rend un tableau structuré (headers + rows) en texte."""
+    headers = table.get("headers", [])
+    rows = table.get("rows", [])
+    lignes = [" | ".join(headers)]
+    lignes.extend(" | ".join(row) for row in rows)
+    return "\n".join(lignes)
+
+
+def to_remuneration_create_list(raw: dict[str, Any]) -> list[RemunerationCreate]:
+    """Valide et transforme un document de rémunération brut en une ligne
+    "texte" puis une ligne "tableau" par tableau structuré."""
+    items = [RemunerationCreate(type="texte", contenu=raw.get("text", ""))]
+    items.extend(
+        RemunerationCreate(type="tableau", contenu=render_table(table))
+        for table in raw.get("tables", [])
+    )
+    return items

@@ -25,8 +25,9 @@ import re
 from src.chunking.models import PosteParsed
 
 _POSTE_HEADER_RE = re.compile(
-    r"^Poste (?P<poste_num>\d+) - (?P<affectation>.+?) \((?P<groupe_fonction>.+?)\)$",
-    re.MULTILINE,
+    r"\APoste (?P<poste_num>\d+) - (?P<affectation>.+?) \((?P<groupe_fonction>.+?)\)\n"
+    r"(?=Mission:)",
+    re.DOTALL,
 )
 
 _FIELDS_RE = re.compile(

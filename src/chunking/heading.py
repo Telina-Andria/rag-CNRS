@@ -4,21 +4,23 @@ Réutilise `heading_chunk()` et `CONCOURS_HEADINGS`
 (`src/chunking/heading_chunking.py`, `src/chunking/build_chunks.py`), aucune
 duplication de l'heuristique de détection de titres.
 
-`clean_pages()` n'est pas réutilisable ici : elle attend une liste de pages
-paginées (`{"page_num":..., "text":...}`), information qu'on n'a plus une
-fois les documents en base (`Complementaire.contenu` est un texte à plat).
-On se contente donc de découper `contenu` en lignes non vides, sans page
-associée (`page_start`/`page_end` valent `None`), comme le fait déjà
-`build_remuneration_chunks()` pour `doc["text"]` dans `build_chunks.py`.
+`avantages`, `accompagnement`, `guide_candidat` et `instituts` ont une ligne
+par page en base (`page_num`, `contenu`) : on reconstruit la liste
+(ligne, page_num) sur toutes les pages de la catégorie avant de lancer
+`heading_chunk`, ce qui permet à `page_start`/`page_end` d'être renseignés.
+`remuneration` n'a pas de pagination (`type` texte/tableau) : les lignes de
+type "tableau" deviennent chacune un chunk dédié, les lignes "texte" suivent
+le même découpage heuristique que les autres catégories mais sans page
+(comme le faisait déjà `build_remuneration_chunks()` dans `build_chunks.py`).
 """
 
-from src.chunking.base import ChunkingStrategy
+from src.chunking.base import ChunkingStrategy, PageDocument
 from src.chunking.build_chunks import CONCOURS_HEADINGS
 from src.chunking.concours_parser import parse_concour_content
 from src.chunking.heading_chunking import heading_chunk
 from src.chunking.models import Chunk
-from src.models.complementaire import Complementaire
 from src.models.concour import Concour
+from src.models.remuneration import Remuneration
 
 
 class HeadingChunkingStrategy(ChunkingStrategy):
@@ -53,9 +55,13 @@ class HeadingChunkingStrategy(ChunkingStrategy):
                 idx += 1
         return chunks
 
-    def chunk_complementaire(self, complementaire: Complementaire) -> list[Chunk]:
+    def chunk_page_documents(self, categorie: str, rows: list[PageDocument]) -> list[Chunk]:
+        rows_by_page = sorted(rows, key=lambda row: row.page_num)
         lines_with_pages = [
-            (line, None) for line in complementaire.contenu.split("\n") if line.strip()
+            (line, row.page_num)
+            for row in rows_by_page
+            for line in row.contenu.split("\n")
+            if line.strip()
         ]
         sections, method = heading_chunk(lines_with_pages)
 
@@ -64,10 +70,10 @@ class HeadingChunkingStrategy(ChunkingStrategy):
             heading_label = section["heading"] or "Introduction"
             chunks.append(
                 Chunk(
-                    chunk_id=f"{complementaire.categorie}_chunk_{idx}",
+                    chunk_id=f"{categorie}_chunk_{idx}",
                     content=f"## {heading_label}\n\n{section['body']}",
                     metadata={
-                        "categorie": complementaire.categorie,
+                        "categorie": categorie,
                         "heading": section["heading"],
                         "page_start": section["page_start"],
                         "page_end": section["page_end"],
@@ -75,4 +81,46 @@ class HeadingChunkingStrategy(ChunkingStrategy):
                     },
                 )
             )
+        return chunks
+
+    def chunk_remuneration(self, rows: list[Remuneration]) -> list[Chunk]:
+        chunks = []
+        idx = 0
+
+        for row in rows:
+            if row.type != "tableau":
+                continue
+            chunks.append(
+                Chunk(
+                    chunk_id=f"remuneration_chunk_{idx}",
+                    content=row.contenu,
+                    metadata={
+                        "categorie": "remuneration",
+                        "heading": f"Tableau {idx + 1}",
+                        "chunking_method": "table",
+                    },
+                )
+            )
+            idx += 1
+
+        for row in rows:
+            if row.type != "texte":
+                continue
+            lines_with_pages = [(line, None) for line in row.contenu.split("\n") if line.strip()]
+            sections, method = heading_chunk(lines_with_pages)
+            for section in sections:
+                heading_label = section["heading"] or "Introduction"
+                chunks.append(
+                    Chunk(
+                        chunk_id=f"remuneration_chunk_{idx}",
+                        content=f"## {heading_label}\n\n{section['body']}",
+                        metadata={
+                            "categorie": "remuneration",
+                            "heading": section["heading"],
+                            "chunking_method": method,
+                        },
+                    )
+                )
+                idx += 1
+
         return chunks

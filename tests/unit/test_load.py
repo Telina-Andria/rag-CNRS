@@ -4,13 +4,17 @@ from testcontainers.community.postgres import PostgresContainer
 
 from src.db.interface.postgresql import PostgreSQLDatabase, PostgreSQLSettings
 from src.ingestion.load import (
-    get_existing_categories,
+    count_rows,
     get_existing_numeros,
-    load_complementaire,
+    load_avantage,
     load_concour,
+    load_remuneration,
 )
-from src.schemas.complementaire import ComplementaireCreate
+from src.models.avantage import Avantage
+from src.models.remuneration import Remuneration
+from src.schemas.avantage import AvantageCreate
 from src.schemas.concour import ConcourCreate
+from src.schemas.remuneration import RemunerationCreate
 
 
 @pytest.fixture
@@ -42,16 +46,28 @@ def test_load_concour_inserts_and_is_visible_in_existing_numeros(db):
         assert get_existing_numeros(session) == {"1"}
 
 
-def test_load_complementaire_inserts_and_is_visible_in_existing_categories(db):
-    data = ComplementaireCreate(categorie="avantages", contenu="Contenu...")
+def test_load_avantage_inserts_and_is_counted(db):
+    data = AvantageCreate(page_num=1, contenu="Contenu...")
 
     with db.get_session() as session:
-        assert get_existing_categories(session) == set()
+        assert count_rows(session, Avantage) == 0
 
-        load_complementaire(session, data)
+        load_avantage(session, data)
         session.commit()
 
-        assert get_existing_categories(session) == {"avantages"}
+        assert count_rows(session, Avantage) == 1
+
+
+def test_load_remuneration_inserts_and_is_counted(db):
+    data = RemunerationCreate(type="tableau", contenu="Contenu...")
+
+    with db.get_session() as session:
+        assert count_rows(session, Remuneration) == 0
+
+        load_remuneration(session, data)
+        session.commit()
+
+        assert count_rows(session, Remuneration) == 1
 
 
 def test_load_concour_duplicate_numero_raises_integrity_error(db):

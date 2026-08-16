@@ -74,6 +74,30 @@ def test_parse_concour_content_rubrique_vide():
     assert postes[0].activites == "Développer des pipelines."
 
 
+def test_parse_concour_content_groupe_fonction_multiligne():
+    raw = {
+        "postes": [
+            {
+                "poste_num": 1,
+                "affectation": "GIF SUR YVETTE",
+                "groupe_fonction": "Groupe 2\nFonction mutualisée avec :\nAutre laboratoire",
+                "mission": "Analyser des données.",
+                "activites": "Développer des pipelines.",
+                "competences": "Python, R.",
+                "contexte": "Unité de recherche.",
+            }
+        ]
+    }
+    content = build_concour_content(raw)
+
+    postes = parse_concour_content(content)
+
+    assert len(postes) == 1
+    assert postes[0].affectation == "GIF SUR YVETTE"
+    assert postes[0].groupe_fonction == "Groupe 2\nFonction mutualisée avec :\nAutre laboratoire"
+    assert postes[0].mission == "Analyser des données."
+
+
 def test_parse_concour_content_empty_returns_empty_list():
     assert parse_concour_content("") == []
 
