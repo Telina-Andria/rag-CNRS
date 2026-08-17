@@ -11,3 +11,6 @@
 !tests/**
 __pycache__/
 *.pyc
+
+# Copie locale du stockage Qdrant (binaire volumineux, pas de sens à versionner)
+src/qdrant/storage/

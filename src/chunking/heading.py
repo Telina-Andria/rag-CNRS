@@ -24,7 +24,7 @@ from src.models.remuneration import Remuneration
 
 
 class HeadingChunkingStrategy(ChunkingStrategy):
-    """Découpage gratuit, heuristique pure Python (pas de LLM)."""
+    """Découpage gratuit, heuristique pure Python."""
 
     def chunk_concour(self, concour: Concour) -> list[Chunk]:
         postes = parse_concour_content(concour.content)
