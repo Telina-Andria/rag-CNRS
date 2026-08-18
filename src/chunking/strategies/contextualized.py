@@ -9,9 +9,9 @@ guide_candidat, instituts, remuneration) : un appel réel à
 catégorie comme document de contexte.
 """
 
-from src.chunking.base import ChunkingStrategy, PageDocument
-from src.chunking.heading import HeadingChunkingStrategy
-from src.chunking.models import Chunk
+from src.chunking.common.models import Chunk
+from src.chunking.interface.base import ChunkingStrategy, PageDocument
+from src.chunking.strategies.heading import HeadingChunkingStrategy
 from src.llm.anthropic_client import AnthropicContextGenerator
 from src.models.concour import Concour
 from src.models.remuneration import Remuneration

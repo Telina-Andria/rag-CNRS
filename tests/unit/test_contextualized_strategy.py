@@ -1,7 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from src.chunking.contextualized import ContextualizedChunkingStrategy
+from src.chunking.strategies.contextualized import ContextualizedChunkingStrategy
 
 
 def make_concour():

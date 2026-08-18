@@ -1,7 +1,7 @@
 import pytest
 from testcontainers.community.postgres import PostgresContainer
 
-from src.chunking.extraction import (
+from src.chunking.common.extraction import (
     extract_accompagnement,
     extract_avantages,
     extract_concours,
@@ -10,7 +10,7 @@ from src.chunking.extraction import (
     extract_remuneration,
 )
 from src.db.interface.postgresql import PostgreSQLDatabase, PostgreSQLSettings
-from src.ingestion.load import (
+from src.ingestion_db.load import (
     load_accompagnement,
     load_avantage,
     load_concour,

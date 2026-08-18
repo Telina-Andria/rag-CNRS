@@ -1,7 +1,7 @@
 import pytest
 
-from src.chunking.concours_parser import ConcourParsingError, parse_concour_content
-from src.ingestion.transform import build_concour_content
+from src.chunking.common.concours_parser import ConcourParsingError, parse_concour_content
+from src.ingestion_db.transform import build_concour_content
 
 RAW_CONCOUR_MULTI = {
     "postes": [

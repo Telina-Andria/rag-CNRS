@@ -2,7 +2,7 @@ import json
 
 import pytest
 
-from src.ingestion import extract
+from src.ingestion_db import extract
 
 
 def test_extract_json_reads_file(tmp_path, monkeypatch):

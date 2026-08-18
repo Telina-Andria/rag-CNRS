@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.chunking.models import Chunk
+from src.chunking.common.models import Chunk
 from src.models.accompagnement import Accompagnement
 from src.models.avantage import Avantage
 from src.models.concour import Concour

@@ -24,9 +24,9 @@ Sortie  : data/chunks/{nom}_chunk.json
 import json
 from pathlib import Path
 
-from src.chunking.heading_chunking import clean_pages, heading_chunk
+from src.chunking.common.heading_chunking import clean_pages, heading_chunk
 
-DATA_DIR = Path(__file__).resolve().parents[2]
+DATA_DIR = Path(__file__).resolve().parents[3]
 IN_DIR = DATA_DIR / "data" / "json"
 OUT_DIR = DATA_DIR / "data" / "chunks"
 

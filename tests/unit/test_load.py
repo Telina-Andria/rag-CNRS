@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from testcontainers.community.postgres import PostgresContainer
 
 from src.db.interface.postgresql import PostgreSQLDatabase, PostgreSQLSettings
-from src.ingestion.load import (
+from src.ingestion_db.load import (
     count_rows,
     get_existing_numeros,
     load_avantage,

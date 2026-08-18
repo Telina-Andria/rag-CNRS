@@ -22,7 +22,7 @@ ce format ; il est protégé par un test de round-trip avec
 
 import re
 
-from src.chunking.models import PosteParsed
+from src.chunking.common.models import PosteParsed
 
 _POSTE_HEADER_RE = re.compile(
     r"\APoste (?P<poste_num>\d+) - (?P<affectation>.+?) \((?P<groupe_fonction>.+?)\)\n"

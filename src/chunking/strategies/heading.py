@@ -1,8 +1,8 @@
 """Stratégie de chunking heuristique "heading-based", gratuite (pas de LLM).
 
 Réutilise `heading_chunk()` et `CONCOURS_HEADINGS`
-(`src/chunking/heading_chunking.py`, `src/chunking/build_chunks.py`), aucune
-duplication de l'heuristique de détection de titres.
+(`src/chunking/common/heading_chunking.py`, `src/chunking/common/build_chunks.py`),
+aucune duplication de l'heuristique de détection de titres.
 
 `avantages`, `accompagnement`, `guide_candidat` et `instituts` ont une ligne
 par page en base (`page_num`, `contenu`) : on reconstruit la liste
@@ -14,11 +14,11 @@ le même découpage heuristique que les autres catégories mais sans page
 (comme le faisait déjà `build_remuneration_chunks()` dans `build_chunks.py`).
 """
 
-from src.chunking.base import ChunkingStrategy, PageDocument
-from src.chunking.build_chunks import CONCOURS_HEADINGS
-from src.chunking.concours_parser import parse_concour_content
-from src.chunking.heading_chunking import heading_chunk
-from src.chunking.models import Chunk
+from src.chunking.common.build_chunks import CONCOURS_HEADINGS
+from src.chunking.common.concours_parser import parse_concour_content
+from src.chunking.common.heading_chunking import heading_chunk
+from src.chunking.common.models import Chunk
+from src.chunking.interface.base import ChunkingStrategy, PageDocument
 from src.models.concour import Concour
 from src.models.remuneration import Remuneration
 

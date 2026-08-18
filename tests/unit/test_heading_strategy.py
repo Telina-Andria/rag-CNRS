@@ -1,6 +1,6 @@
 from types import SimpleNamespace
 
-from src.chunking.heading import HeadingChunkingStrategy
+from src.chunking.strategies.heading import HeadingChunkingStrategy
 
 
 def make_concour():
